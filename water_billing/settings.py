@@ -45,7 +45,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'water_billing.urls'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
+    "https://aqua-bill-blond.vercel.app/",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
