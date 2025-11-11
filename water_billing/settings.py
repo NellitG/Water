@@ -13,7 +13,7 @@ SECRET_KEY = 'django-insecure-2y=$4@-gs$s)hlt)5ynxkup#rbr*&ypg42b#u7*!q4xo52dmr*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['water-5g2v.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['aqua-fresh.onrender.com', 'localhost', '127.0.0.1']
 
 
 
