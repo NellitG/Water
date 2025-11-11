@@ -92,9 +92,6 @@ class DashboardStats(APIView):
     """Aggregates system-wide dashboard analytics."""
 
     def get(self, request):
-        from django.utils import timezone
-        from django.db.models.functions import TruncMonth
-        from django.db.models import Sum
 
         # --- Totals ---
         total_clients = Client.objects.count()
