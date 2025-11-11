@@ -46,6 +46,7 @@ ROOT_URLCONF = 'water_billing.urls'
 
 CORS_ALLOWED_ORIGINS = [
     
+    "https://aqua-bill-nelsons-projects-24ef2c9d.vercel.app/"
     "https://aqua-bill-mu.vercel.app/"
     
 ]
