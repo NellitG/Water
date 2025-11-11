@@ -8,6 +8,9 @@ from django.db.models.functions import TruncMonth
 from billing.models import Client, MeterReading, Receipt
 from .serializers import ClientSerializer, MeterReadingSerializer
 
+def home(request):
+    return JsonResponse({"message": "Welcome to the Water Billing System API"})
+
 # CLIENT MANAGEMENT
 class ClientListCreate(generics.ListCreateAPIView):
     queryset = Client.objects.all()
