@@ -80,12 +80,14 @@ class CalculateBill(APIView):
         total_amount = units_consumed * rate_per_unit
 
         return Response(
-            {
+            {    
+                "client_id": client.id,        
+                "client": client.name,
                 "previous_reading": previous_reading,
                 "current_reading": current_reading,
                 "units_consumed": units_consumed,
                 "rate_per_unit": rate_per_unit,
-                "total_amount": total_amount,
+                "amount": total_amount,
             },
             status=status.HTTP_200_OK,
         )
