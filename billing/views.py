@@ -20,16 +20,9 @@ class ClientListCreate(generics.ListCreateAPIView):
 class MeterReadingListCreate(generics.ListCreateAPIView):
     queryset = MeterReading.objects.all()
     serializer_class = MeterReadingSerializer
-
-    def perform_create(self, serializer):
-        return serializer.save()
-
     def create(self, request, *args, **kwargs):
-        """Ensure the response includes the full serialized object after creation."""
-        response = super().create(request, *args, **kwargs)
-        instance = MeterReading.objects.get(pk=response.data["id"])
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+        return super().create(request, *args, **kwargs)
 
 # FETCH PREVIOUS READING
 class ClientPreviousReading(APIView):
