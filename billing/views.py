@@ -7,9 +7,26 @@ from django.utils import timezone
 from django.db.models.functions import TruncMonth
 from billing.models import Client, MeterReading, Receipt
 from .serializers import ClientSerializer, MeterReadingSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
 
 def home(request):
     return JsonResponse({"message": "Welcome to the Water Billing System API"})
+
+# LOGIN VIEW
+class LoginView(APIView):
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        user = authenticate(request=request, username=username, password=password)
+
+        if user is not None:
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({"token": token.key}, status=status.HTTP_200_OK)
+
+        return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 # CLIENT MANAGEMENT
 class ClientListCreate(generics.ListCreateAPIView):
