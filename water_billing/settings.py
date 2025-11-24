@@ -1,4 +1,10 @@
+import os
 from pathlib import Path
+from urllib.parse import urlparse, parse_qsl
+from dotenv import load_dotenv
+from os import getenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,8 +20,6 @@ SECRET_KEY = 'django-insecure-2y=$4@-gs$s)hlt)5ynxkup#rbr*&ypg42b#u7*!q4xo52dmr*
 DEBUG = True
 
 ALLOWED_HOSTS = ['aqua-fresh.onrender.com', 'localhost', '127.0.0.1']
-
-
 
 # Application definition
 
@@ -80,10 +84,19 @@ WSGI_APPLICATION = 'water_billing.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': tmpPostgres.path[1:],               
+        'USER': tmpPostgres.username,
+        'PASSWORD': tmpPostgres.password,
+        'HOST': tmpPostgres.hostname,
+        'PORT': tmpPostgres.port or 5432,
+        'OPTIONS': {
+            'sslmode': 'require',
+        }
     }
 }
 
