@@ -33,6 +33,12 @@ class ClientListCreate(generics.ListCreateAPIView):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
 
+class ClientRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Client.objects.all()
+    serializer_class = ClientSerializer
+    lookup_field = 'id'
+
+
 # METER READINGS MANAGEMENT
 class MeterReadingListCreate(generics.ListCreateAPIView):
     queryset = MeterReading.objects.all()
@@ -40,6 +46,11 @@ class MeterReadingListCreate(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
     
         return super().create(request, *args, **kwargs)
+
+class MeterReadingRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MeterReading.objects.all()
+    serializer_class = MeterReadingSerializer
+    lookup_field = "id"
 
 # FETCH PREVIOUS READING
 class ClientPreviousReading(APIView):
