@@ -141,8 +141,6 @@ Nelson Kamau– Django/Vue Developer
 
 Dedicated to building practical systems for SMEs and Kenyan utilities.
 
-
-
 **How To Use The Django Template Repository**
 
 env already installed
