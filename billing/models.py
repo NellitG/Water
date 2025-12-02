@@ -13,12 +13,18 @@ class Client(models.Model):
         return self.name
 
 class Receipt(models.Model):
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='receipts')
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    created_at = models.DateTimeField(default=timezone.now)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="receipts")
+    date = models.DateTimeField(auto_now_add=True)
+    meter_number = models.CharField(max_length=50)
+    previous_reading = models.FloatField()
+    current_reading = models.FloatField()
+    units_consumed = models.FloatField()
+    rate_per_unit = models.FloatField()
+    amount = models.FloatField()
+    receipt_number = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
-        return f"Receipt {self.client.name} - {self.amount}"
+        return f"Receipt for {self.client.name}"
 
 class MeterReading(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='readings')

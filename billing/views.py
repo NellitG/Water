@@ -6,13 +6,34 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.db.models.functions import TruncMonth
 from billing.models import Client, MeterReading, Receipt
-from .serializers import ClientSerializer, MeterReadingSerializer
+from .serializers import ClientSerializer, MeterReadingSerializer, ReceiptSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 
 def home(request):
     return JsonResponse({"message": "Welcome to the Water Billing System API"})
+
+class ReceiptListCreate(generics.ListCreateAPIView):
+    queryset = Receipt.objects.all().order_by("-date")
+    serializer_class = ReceiptSerializer
+
+
+class ReceiptRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Receipt.objects.all()
+    serializer_class = ReceiptSerializer
+    lookup_field = "id"
+
+    def update(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Updating receipts is not allowed."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+class SaveReceiptPDF(APIView):
+    def post(self, request, id):
+        return Response({"detail": "PDF saving not implemented yet"}, status=200)
+
 
 # LOGIN VIEW
 class LoginView(APIView):

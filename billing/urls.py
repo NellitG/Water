@@ -29,4 +29,9 @@ urlpatterns = [
     # STATS + AUTH
     path("dashboard-stats/", DashboardStats.as_view(), name="dashboard_stats"),
     path("login/", LoginView.as_view(), name="login"),
+
+    # Receipts
+    path("receipts/", views.ReceiptListCreate.as_view(), name="receipts"),
+    path("receipts/<int:id>/", views.ReceiptRetrieveUpdateDelete.as_view(), name="receipt_detail"),
+    path("receipts/<int:id>/save-pdf/", views.SaveReceiptPDF.as_view(), name="save_receipt_pdf"),
 ]
