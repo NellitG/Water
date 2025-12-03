@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Client, MeterReading, Receipt
+from django.utils.crypto import get_random_string
 
 
 class ClientSerializer(serializers.ModelSerializer):
@@ -55,9 +56,7 @@ class MeterReadingSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
-from rest_framework import serializers
-from .models import Receipt
-from django.utils.crypto import get_random_string
+
 
 
 class ReceiptSerializer(serializers.ModelSerializer):

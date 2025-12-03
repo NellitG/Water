@@ -11,18 +11,22 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 
+# --- Home ---
 def home(request):
     return JsonResponse({"message": "Welcome to the Water Billing System API"})
 
+
+# --- RECEIPTS ---
 class ReceiptListCreate(generics.ListCreateAPIView):
     queryset = Receipt.objects.all().order_by("-date")
     serializer_class = ReceiptSerializer
+
 
 class ReceiptsByClient(APIView):
     def get(self, request, client_id):
         receipts = Receipt.objects.filter(client_id=client_id).order_by("-date")
         serializer = ReceiptSerializer(receipts, many=True)
-        return Response(serializer.data, status=200)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ReceiptRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
@@ -36,12 +40,62 @@ class ReceiptRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-class SaveReceiptPDF(APIView):
-    def post(self, request, id):
-        return Response({"detail": "PDF saving not implemented yet"}, status=200)
 
+# --- NEW: Save receipt properly ---
+class SaveReceiptForClient(APIView):
+    """
+    Creates a new receipt for a client based on current reading, previous reading, and rate.
+    """
 
-# LOGIN VIEW
+    def post(self, request, client_id):
+        try:
+            client = Client.objects.get(id=client_id)
+        except Client.DoesNotExist:
+            return Response({"detail": "Client not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get input
+        current_reading = request.data.get("current_reading")
+        rate_per_unit = request.data.get("rate_per_unit", 120)
+
+        # Get previous reading
+        last_reading = (
+            MeterReading.objects.filter(client=client)
+            .order_by("-date")
+            .first()
+        )
+        previous_reading = float(last_reading.current_reading) if last_reading else 0
+
+        # Validate
+        try:
+            current_reading = float(current_reading)
+            rate_per_unit = float(rate_per_unit)
+        except (TypeError, ValueError):
+            return Response({"detail": "Invalid current reading or rate"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if current_reading < previous_reading:
+            return Response({"detail": "Current reading cannot be less than previous reading"}, status=status.HTTP_400_BAD_REQUEST)
+
+        units_consumed = current_reading - previous_reading
+        amount = units_consumed * rate_per_unit
+
+        receipt_data = {
+            "client": client.id,
+            "meter_number": last_reading.meter_number if last_reading else "",
+            "previous_reading": previous_reading,
+            "current_reading": current_reading,
+            "units_consumed": units_consumed,
+            "rate_per_unit": rate_per_unit,
+            "amount": amount,
+        }
+
+        serializer = ReceiptSerializer(data=receipt_data)
+        if serializer.is_valid():
+            receipt = serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+# --- LOGIN VIEW ---
 class LoginView(APIView):
     def post(self, request):
         username = request.data.get("username")
@@ -55,10 +109,12 @@ class LoginView(APIView):
 
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
-# CLIENT MANAGEMENT
+
+# --- CLIENT MANAGEMENT ---
 class ClientListCreate(generics.ListCreateAPIView):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
+
 
 class ClientRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     queryset = Client.objects.all()
@@ -66,20 +122,22 @@ class ClientRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'id'
 
 
-# METER READINGS MANAGEMENT
+# --- METER READINGS MANAGEMENT ---
 class MeterReadingListCreate(generics.ListCreateAPIView):
     queryset = MeterReading.objects.all()
     serializer_class = MeterReadingSerializer
+
     def create(self, request, *args, **kwargs):
-    
         return super().create(request, *args, **kwargs)
+
 
 class MeterReadingRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     queryset = MeterReading.objects.all()
     serializer_class = MeterReadingSerializer
     lookup_field = "id"
 
-# FETCH PREVIOUS READING
+
+# --- FETCH PREVIOUS READING ---
 class ClientPreviousReading(APIView):
     def get(self, request, client_id):
         """Return the last reading value for the given client."""
@@ -91,7 +149,8 @@ class ClientPreviousReading(APIView):
         previous_value = float(last_reading.current_reading) if last_reading else 0
         return Response({"previous_reading": previous_value}, status=status.HTTP_200_OK)
 
-# BILL CALCULATION
+
+# --- BILL CALCULATION ---
 class CalculateBill(APIView):
     def post(self, request, client_id):
         """Calculate bill for a given client based on current reading."""
@@ -110,7 +169,6 @@ class CalculateBill(APIView):
         except (TypeError, ValueError):
             return Response({"error": "Invalid reading or rate"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Get previous reading
         last_reading = (
             MeterReading.objects.filter(client=client)
             .order_by("-date")
@@ -128,8 +186,8 @@ class CalculateBill(APIView):
         total_amount = units_consumed * rate_per_unit
 
         return Response(
-            {    
-                "client_id": client.id,        
+            {
+                "client_id": client.id,
                 "client": client.name,
                 "previous_reading": previous_reading,
                 "current_reading": current_reading,
@@ -139,21 +197,17 @@ class CalculateBill(APIView):
             },
             status=status.HTTP_200_OK,
         )
-    
-# DASHBOARD STATISTICS
+
+
+# --- DASHBOARD STATISTICS ---
 class DashboardStats(APIView):
     """Aggregates system-wide dashboard analytics."""
 
     def get(self, request):
-
-        # --- Totals ---
         total_clients = Client.objects.count()
         total_readings = MeterReading.objects.count()
-
-        # --- Total revenue (from MeterReading) ---
         total_revenue = MeterReading.objects.aggregate(total=Sum("amount"))["total"] or 0
 
-        # --- This month's revenue ---
         now = timezone.now()
         current_month = now.month
         month_revenue = (
@@ -163,7 +217,6 @@ class DashboardStats(APIView):
             or 0
         )
 
-        # --- Monthly consumption ---
         consumption_data = (
             MeterReading.objects.annotate(month=TruncMonth("date"))
             .values("month")
@@ -173,7 +226,6 @@ class DashboardStats(APIView):
         consumption_months = [c["month"].strftime("%b %Y") for c in consumption_data]
         consumption_values = [float(c["total_units"] or 0) for c in consumption_data]
 
-        # --- Revenue trend ---
         revenue_data = (
             MeterReading.objects.annotate(month=TruncMonth("date"))
             .values("month")
@@ -183,7 +235,6 @@ class DashboardStats(APIView):
         revenue_months = [r["month"].strftime("%b %Y") for r in revenue_data]
         revenue_values = [float(r["total_amount"] or 0) for r in revenue_data]
 
-        # --- Construct final response ---
         data = {
             "total_clients": total_clients,
             "total_readings": total_readings,
@@ -200,4 +251,3 @@ class DashboardStats(APIView):
         }
 
         return Response(data)
-
