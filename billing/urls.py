@@ -34,4 +34,6 @@ urlpatterns = [
     path("receipts/", views.ReceiptListCreate.as_view(), name="receipts"),
     path("receipts/<int:id>/", views.ReceiptRetrieveUpdateDelete.as_view(), name="receipt_detail"),
     path("receipts/<int:id>/save-pdf/", views.SaveReceiptPDF.as_view(), name="save_receipt_pdf"),
+    path("clients/<int:id>/receipts/", views.ReceiptsByClient.as_view(), name="client_receipts"),
+
 ]

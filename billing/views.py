@@ -18,6 +18,12 @@ class ReceiptListCreate(generics.ListCreateAPIView):
     queryset = Receipt.objects.all().order_by("-date")
     serializer_class = ReceiptSerializer
 
+class ReceiptsByClient(APIView):
+    def get(self, request, client_id):
+        receipts = Receipt.objects.filter(client_id=client_id).order_by("-date")
+        serializer = ReceiptSerializer(receipts, many=True)
+        return Response(serializer.data, status=200)
+
 
 class ReceiptRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     queryset = Receipt.objects.all()
